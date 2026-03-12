@@ -1,13 +1,3 @@
-Below is a **clean, professional, copy-paste ready `README.md`** for your repository with:
-
-* GitHub badges
-* Live demo link
-* Clear structure
-* No GIF
-* No future improvements section
-
----
-
 # 📖 Divine Pearls Presenter
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-green?style=for-the-badge\&logo=github)](https://alihusains.github.io/presenter/)
