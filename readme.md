@@ -89,17 +89,15 @@ Each Arabic line becomes **one slide**, making recitation clear and readable for
 | Home          | First Slide     |
 | End           | Last Slide      |
 | F             | Fullscreen Mode |
-
-* | Increase Font Size
-
-- | Decrease Font Size
-  S | Display Settings
-  ? | Show Keyboard Help
-  Esc | Exit Presentation
+|+              | Increase Font Size|
+|- | Decrease Font Size|
+|  S | Display Settings|
+|  ? | Show Keyboard Help
+|  Esc | Exit Presentation
 
 ---
 
-# 🖱 Navigation Methods
+# ⌨️ Navigation Methods
 
 Slides can be navigated using multiple input methods:
 
@@ -309,11 +307,11 @@ If you find this project useful:
 
 Ali Husain Sorathiya
 
-GitHub
+GitHub:
 [https://github.com/alihusains](https://github.com/alihusains)
 
-Project Repository
+Project Repository:
 [https://github.com/alihusains/presenter](https://github.com/alihusains/presenter)
 
-Live Demo
+Live Demo:
 [https://alihusains.github.io/presenter/](https://alihusains.github.io/presenter/)
