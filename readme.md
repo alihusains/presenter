@@ -97,7 +97,7 @@ Each Arabic line becomes **one slide**, making recitation clear and readable for
 
 ---
 
-# ⌨️ Navigation Methods
+# ⬆️/⬇️ Navigation Methods
 
 Slides can be navigated using multiple input methods:
 
