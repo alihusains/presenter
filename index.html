@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dua Presenter</title>
+
+    <!-- Google Fonts fallbacks -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Roboto:wght@300;400;500;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=Lora:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========== FONT FACES (from ya-mahdi.net) ========== */
+        @font-face {
+            font-family: 'ArabicFont';
+            src: url('fonts/Al-Qalam.ttf') format('truetype');
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'UrduFont';
+            src: url('fonts/Jameel.ttf') format('truetype');
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'LatinFont';
+            src: url('fonts/Roboto.ttf') format('truetype');
+            font-display: swap;
+        }
+
+        /* ========== CSS VARIABLES ========== */
+        :root {
+            --arabic-size: 3rem;
+            --trans-size: 1.5rem;
+            --gold: #c8a951;
+            --gold-light: #f5d680;
+            --cream: #f5e6c8;
+            --cream-dim: #a89070;
+            --bg-dark: #0d0a06;
+            --bg-warm: #1a1008;
+            --bar-bg: rgba(26, 15, 10, 0.95);
+            --border-subtle: rgba(200, 169, 81, 0.15);
+        }
+
+        /* ========== RESET ========== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'LatinFont', 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--cream);
+        }
+
+        /* ========== INPUT SCREEN ========== */
+        #inputScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a0f0a 0%, #2d1b12 50%, #1a0f0a 100%);
+            padding: 20px;
+        }
+
+        .logo-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 20px rgba(200,169,81,0.3));
+        }
+
+        .input-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 8px;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .input-subtitle {
+            font-size: 1rem;
+            color: var(--cream-dim);
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        #urlInput {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.06);
+            border: 2px solid rgba(200,169,81,0.4);
+            border-radius: 8px;
+            color: var(--cream);
+            outline: none;
+            font-family: 'LatinFont', 'Roboto', monospace;
+            transition: all 0.3s;
+        }
+
+        #urlInput::placeholder { color: #6a5a40; }
+
+        #urlInput:focus {
+            border-color: var(--gold-light);
+            box-shadow: 0 0 25px rgba(200,169,81,0.15);
+        }
+
+        #loadBtn {
+            padding: 14px 30px;
+            background: linear-gradient(135deg, var(--gold), #a08030);
+            color: #1a0f0a;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'LatinFont', 'Roboto', sans-serif;
+            white-space: nowrap;
+        }
+
+        #loadBtn:hover {
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(200,169,81,0.3);
+        }
+
+        #loadBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .status-text {
+            margin-top: 24px;
+            font-size: 0.95rem;
+            text-align: center;
+            min-height: 1.4em;
+        }
+
+        .status-text.loading { color: var(--gold); }
+        .status-text.error { color: #e74c3c; }
+        .status-text.hidden { visibility: hidden; }
+
+        .shortcuts-hint {
+            position: absolute;
+            bottom: 30px;
+            color: #5a4a30;
+            font-size: 0.8rem;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ========== PRESENTER SCREEN ========== */
+        #presenterScreen {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-warm) 40%, var(--bg-dark) 100%);
+        }
+
+        /* --- Top Bar --- */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: var(--bar-bg);
+            border-bottom: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 160px;
+        }
+
+        .back-btn {
+            padding: 5px 12px;
+            background: rgba(200,169,81,0.1);
+            border: 1px solid rgba(200,169,81,0.25);
+            border-radius: 5px;
+            color: var(--gold);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'LatinFont', 'Roboto', sans-serif;
+        }
+
+        .back-btn:hover { background: rgba(200,169,81,0.25); }
+
+        .slide-counter {
+            font-size: 0.95rem;
+            color: var(--gold);
+            font-family: 'LatinFont', 'Roboto', monospace;
+            white-space: nowrap;
+        }
+
+        .slide-title {
+            font-size: 1rem;
+            color: #b89c60;
+            text-align: center;
+            flex: 1;
+            padding: 0 16px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 160px;
+            justify-content: flex-end;
+        }
+
+        .ctrl-btn {
+            width: 34px;
+            height: 34px;
+            background: rgba(200,169,81,0.1);
+            border: 1px solid rgba(200,169,81,0.2);
+            border-radius: 5px;
+            color: var(--gold);
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .ctrl-btn:hover { background: rgba(200,169,81,0.3); }
+        .ctrl-btn.active { background: rgba(200,169,81,0.35); border-color: var(--gold); }
+
+        .ctrl-sep {
+            width: 1px;
+            height: 20px;
+            background: rgba(200,169,81,0.15);
+            margin: 0 4px;
+        }
+
+        /* --- Slide Area --- */
+        .slide-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px 80px;
+            overflow: hidden;
+        }
+
+        .slide-content {
+            text-align: center;
+            max-width: 92%;
+            width: 100%;
+            transition: opacity 0.2s ease;
+        }
+
+        .slide-content.fading { opacity: 0; }
+
+        /* Arabic text */
+        .arabic-text {
+            font-family: 'ArabicFont', 'Amiri', serif;
+            direction: rtl;
+            font-size: var(--arabic-size);
+            line-height: 2;
+            color: var(--cream);
+            margin-bottom: 28px;
+            text-shadow: 0 1px 8px rgba(200,169,81,0.08);
+            word-spacing: 4px;
+        }
+
+        /* Translation text */
+        .translation-text {
+            font-size: var(--trans-size);
+            line-height: 1.8;
+            color: var(--gold);
+            max-width: 85%;
+            margin: 0 auto;
+        }
+
+        /* Language-specific translation fonts */
+        .translation-text.lang-ur {
+            font-family: 'UrduFont', 'Noto Nastaliq Urdu', serif;
+            direction: rtl;
+            line-height: 2.4;
+        }
+
+        .translation-text.lang-en,
+        .translation-text.lang-ro {
+            font-family: 'LatinFont', 'Roboto', sans-serif;
+        }
+
+        .translation-text.lang-az {
+            font-family: 'Lora', serif;
+        }
+
+        /* --- Intro Slide --- */
+        .intro-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .intro-title {
+            font-size: calc(var(--arabic-size) * 0.9);
+            color: var(--gold);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .intro-title.rtl {
+            font-family: 'UrduFont', 'Noto Nastaliq Urdu', serif;
+            direction: rtl;
+        }
+
+        .intro-description {
+            font-size: calc(var(--trans-size) * 0.9);
+            color: var(--cream-dim);
+            line-height: 1.9;
+            max-width: 800px;
+        }
+
+        .intro-description.rtl {
+            font-family: 'UrduFont', 'Noto Nastaliq Urdu', serif;
+            direction: rtl;
+            line-height: 2.4;
+        }
+
+        .intro-divider {
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .intro-hint {
+            color: #5a4a30;
+            font-size: 0.85rem;
+        }
+
+        /* --- Navigation Arrows --- */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 80px;
+            background: rgba(200,169,81,0.06);
+            border: 1px solid rgba(200,169,81,0.12);
+            border-radius: 8px;
+            color: rgba(200,169,81,0.5);
+            font-size: 1.6rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 50;
+            user-select: none;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(200,169,81,0.2);
+            color: var(--gold);
+            border-color: rgba(200,169,81,0.3);
+        }
+
+        .nav-arrow.left { left: 15px; }
+        .nav-arrow.right { right: 15px; }
+
+        .nav-arrow:disabled {
+            opacity: 0.2;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* --- Bottom Bar --- */
+        .bottom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 20px;
+            background: var(--bar-bg);
+            border-top: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .progress-container {
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(200,169,81,0.12);
+            border-radius: 2px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.7rem;
+            color: #5a4a30;
+            white-space: nowrap;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        /* ========== FULLSCREEN ========== */
+        :fullscreen #presenterScreen,
+        :-webkit-full-screen #presenterScreen {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-warm) 40%, var(--bg-dark) 100%);
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 900px) {
+            :root {
+                --arabic-size: 2.2rem;
+                --trans-size: 1.2rem;
+            }
+
+            .slide-area { padding: 15px 55px; }
+
+            .nav-arrow {
+                width: 36px;
+                height: 60px;
+                font-size: 1.2rem;
+            }
+
+            .nav-arrow.left { left: 8px; }
+            .nav-arrow.right { right: 8px; }
+        }
+
+        @media (max-width: 600px) {
+            :root {
+                --arabic-size: 1.8rem;
+                --trans-size: 1rem;
+            }
+
+            .input-group { flex-direction: column; }
+            .input-title { font-size: 1.8rem; }
+            .slide-title { display: none; }
+            .slide-area { padding: 12px 45px; }
+            .top-bar { padding: 8px 12px; }
+            .back-btn { padding: 4px 8px; font-size: 0.75rem; }
+            .ctrl-btn { width: 30px; height: 30px; font-size: 0.8rem; }
+
+            .nav-arrow {
+                width: 30px;
+                height: 50px;
+                font-size: 1rem;
+            }
+
+            .nav-arrow.left { left: 4px; }
+            .nav-arrow.right { right: 4px; }
+        }
+
+        /* ========== UTILITIES ========== */
+        .hidden { display: none !important; }
+
+        /* Smooth scroll for progress bar click */
+        .progress-bar:hover { height: 5px; }
+        .progress-bar { transition: height 0.2s; }
+
+        /* Settings Panel Overlay */
+        .settings-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .settings-overlay.show { display: flex; }
+
+        .settings-panel {
+            background: #1e140e;
+            border: 1px solid rgba(200,169,81,0.25);
+            border-radius: 12px;
+            padding: 28px;
+            width: 90%;
+            max-width: 420px;
+            color: var(--cream);
+        }
+
+        .settings-panel h3 {
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .setting-label {
+            font-size: 0.9rem;
+            color: var(--cream-dim);
+        }
+
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-value .ctrl-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 0.85rem;
+        }
+
+        .setting-num {
+            font-size: 0.9rem;
+            color: var(--gold);
+            min-width: 50px;
+            text-align: center;
+            font-family: monospace;
+        }
+
+        .settings-close {
+            display: block;
+            width: 100%;
+            margin-top: 18px;
+            padding: 10px;
+            background: rgba(200,169,81,0.15);
+            border: 1px solid rgba(200,169,81,0.3);
+            border-radius: 6px;
+            color: var(--gold);
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-family: 'LatinFont', 'Roboto', sans-serif;
+        }
+
+        .settings-close:hover { background: rgba(200,169,81,0.25); }
+
+        /* Keyboard shortcuts help */
+        .shortcuts-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .shortcuts-overlay.show { display: flex; }
+
+        .shortcuts-panel {
+            background: #1e140e;
+            border: 1px solid rgba(200,169,81,0.25);
+            border-radius: 12px;
+            padding: 28px;
+            width: 90%;
+            max-width: 380px;
+            color: var(--cream);
+        }
+
+        .shortcuts-panel h3 {
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(200,169,81,0.08);
+        }
+
+        .shortcut-key {
+            font-family: monospace;
+            background: rgba(200,169,81,0.12);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--gold);
+        }
+
+        .shortcut-desc {
+            font-size: 0.85rem;
+            color: var(--cream-dim);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== INPUT SCREEN ==================== -->
+    <div id="inputScreen">
+        <div class="logo-icon">📖</div>
+        <div class="input-title">Dua Presenter</div>
+        <div class="input-subtitle">Paste a ya-mahdi.net link to begin the presentation</div>
+
+        <div class="input-group">
+            <input type="text" id="urlInput"
+                   placeholder="https://ya-mahdi.net/view.php?cat=maf_dua40&lang=en"
+                   autocomplete="off" spellcheck="false">
+            <button id="loadBtn">Load</button>
+        </div>
+
+        <div class="status-text hidden" id="statusText">&nbsp;</div>
+
+        <div class="shortcuts-hint">
+            Press <strong>Enter</strong> to load &middot; Use <strong>← →</strong> arrow keys to navigate slides<br>
+            <strong>F</strong> for fullscreen &middot; <strong>+/-</strong> to resize text &middot; <strong>?</strong> for all shortcuts
+        </div>
+    </div>
+
+    <!-- ==================== PRESENTER SCREEN ==================== -->
+    <div id="presenterScreen">
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-left">
+                <button class="back-btn" id="backBtn" title="Back to input (Esc)">← Back</button>
+                <span class="slide-counter" id="slideCounter">1 / 1</span>
+            </div>
+            <div class="slide-title" id="slideTitle"></div>
+            <div class="controls">
+                <button class="ctrl-btn" id="btnFontDown" title="Decrease font (-)">A−</button>
+                <button class="ctrl-btn" id="btnFontUp" title="Increase font (+)">A+</button>
+                <div class="ctrl-sep"></div>
+                <button class="ctrl-btn" id="btnSettings" title="Display settings (S)">⚙</button>
+                <button class="ctrl-btn" id="btnFullscreen" title="Fullscreen (F)">⛶</button>
+                <button class="ctrl-btn" id="btnHelp" title="Keyboard shortcuts (?)">?</button>
+            </div>
+        </div>
+
+        <!-- Slide Area -->
+        <div class="slide-area" id="slideArea">
+            <button class="nav-arrow left" id="btnPrev" title="Previous slide (←)">‹</button>
+            <div class="slide-content" id="slideContent"></div>
+            <button class="nav-arrow right" id="btnNext" title="Next slide (→)">›</button>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="bottom-bar">
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SETTINGS OVERLAY ==================== -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+            <h3>Display Settings</h3>
+
+            <div class="setting-row">
+                <span class="setting-label">Arabic Font Size</span>
+                <div class="setting-value">
+                    <button class="ctrl-btn" id="sArabicDown">−</button>
+                    <span class="setting-num" id="sArabicSize">3.0</span>
+                    <button class="ctrl-btn" id="sArabicUp">+</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">Translation Font Size</span>
+                <div class="setting-value">
+                    <button class="ctrl-btn" id="sTransDown">−</button>
+                    <span class="setting-num" id="sTransSize">1.5</span>
+                    <button class="ctrl-btn" id="sTransUp">+</button>
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <span class="setting-label">Auto-fit text</span>
+                <div class="setting-value">
+                    <button class="ctrl-btn" id="sAutoFit" style="width:auto;padding:0 10px;">ON</button>
+                </div>
+            </div>
+
+            <button class="settings-close" id="settingsClose">Close</button>
+        </div>
+    </div>
+
+    <!-- ==================== SHORTCUTS OVERLAY ==================== -->
+    <div class="shortcuts-overlay" id="shortcutsOverlay">
+        <div class="shortcuts-panel">
+            <h3>Keyboard Shortcuts</h3>
+            <div class="shortcut-row"><span class="shortcut-desc">Next slide</span><span class="shortcut-key">→ / Space</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Previous slide</span><span class="shortcut-key">← / Backspace</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">First slide</span><span class="shortcut-key">Home</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Last slide</span><span class="shortcut-key">End</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Fullscreen</span><span class="shortcut-key">F</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Increase font</span><span class="shortcut-key">+ / =</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Decrease font</span><span class="shortcut-key">-</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Settings</span><span class="shortcut-key">S</span></div>
+            <div class="shortcut-row"><span class="shortcut-desc">Back / Exit</span><span class="shortcut-key">Esc</span></div>
+            <button class="settings-close" id="shortcutsClose">Close</button>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ==================== -->
+    <script>
+    (function () {
+        'use strict';
+
+        // ==================== STATE ====================
+        let slides = [];
+        let currentSlide = 0;
+        let currentLang = 'en';
+        let arabicFontSize = 3;
+        let transFontSize = 1.5;
+        let autoFit = true;
+        let title = '';
+
+        // ==================== DOM REFS ====================
+        const $ = (sel) => document.querySelector(sel);
+        const inputScreen = $('#inputScreen');
+        const presenterScreen = $('#presenterScreen');
+        const urlInput = $('#urlInput');
+        const loadBtn = $('#loadBtn');
+        const statusText = $('#statusText');
+        const slideContent = $('#slideContent');
+        const slideCounter = $('#slideCounter');
+        const slideTitle = $('#slideTitle');
+        const progressFill = $('#progressFill');
+        const progressText = $('#progressText');
+        const progressBar = $('#progressBar');
+        const slideArea = $('#slideArea');
+        const settingsOverlay = $('#settingsOverlay');
+        const shortcutsOverlay = $('#shortcutsOverlay');
+
+        // ==================== URL PARSING ====================
+        function parseUrl(url) {
+            try {
+                const u = new URL(url);
+                return {
+                    cat: u.searchParams.get('cat'),
+                    lang: u.searchParams.get('lang') || 'en',
+                    valid: !!u.searchParams.get('cat')
+                };
+            } catch (e) {
+                return { valid: false };
+            }
+        }
+
+        // ==================== FETCH VIA CORS PROXY ====================
+        async function fetchPage(url) {
+            const proxies = [
+                {
+                    make: (u) => 'https://api.allorigins.win/get?url=' + encodeURIComponent(u),
+                    parse: async (r) => { const j = await r.json(); return j.contents; }
+                },
+                {
+                    make: (u) => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+                    parse: async (r) => await r.text()
+                }
+            ];
+
+            for (const proxy of proxies) {
+                try {
+                    const resp = await fetch(proxy.make(url));
+                    if (resp.ok) {
+                        const html = await proxy.parse(resp);
+                        if (html && html.length > 500) return html;
+                    }
+                } catch (e) { /* try next */ }
+            }
+
+            throw new Error('Could not fetch the page. Please check the URL or try again later.');
+        }
+
+        // ==================== HTML PARSING ====================
+        function parseContent(html, lang) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const result = [];
+
+            // 1. Extract title (first .translation without .translatable)
+            let titleText = '';
+            const firstCard = doc.querySelector('.card.big-card');
+            if (firstCard) {
+                const firstTrans = firstCard.querySelector('.translation:not(.translatable)');
+                if (firstTrans) titleText = firstTrans.textContent.trim();
+            }
+
+            // 2. Get subtitle/description from first card
+            let descriptionText = '';
+            if (firstCard) {
+                const allTrans = firstCard.querySelectorAll('.translation');
+                const descParts = [];
+                allTrans.forEach((t, i) => {
+                    if (i === 0) return; // skip title
+                    if (!t.classList.contains('translatable')) {
+                        descParts.push(t.textContent.trim());
+                    }
+                });
+                descriptionText = descParts.join(' ');
+            }
+
+            // 3. Intro slide
+            result.push({
+                type: 'intro',
+                title: titleText,
+                description: descriptionText
+            });
+
+            // 4. Count intro translatables in first card
+            let introTransCount = 0;
+            if (firstCard) {
+                introTransCount = firstCard.querySelectorAll('.translation.translatable').length;
+            }
+
+            // 5. Get all Arabic lines and all translatable translations
+            const arabicLines = doc.querySelectorAll('.arabic.arabic-line');
+            const allTranslatables = doc.querySelectorAll('.translation.translatable');
+            const pairedTrans = Array.from(allTranslatables).slice(introTransCount);
+
+            // 6. Build content slides
+            for (let i = 0; i < arabicLines.length; i++) {
+                const arabic = arabicLines[i].textContent.trim();
+                const trans = i < pairedTrans.length ? pairedTrans[i].textContent.trim() : '';
+
+                if (arabic) {
+                    result.push({
+                        type: 'content',
+                        arabic: arabic,
+                        translation: trans
+                    });
+                }
+            }
+
+            return { title: titleText, slides: result };
+        }
+
+        // ==================== LOADING ====================
+        async function loadPresentation() {
+            const url = urlInput.value.trim();
+            if (!url) { showStatus('Please enter a URL', 'error'); return; }
+
+            const parsed = parseUrl(url);
+            if (!parsed.valid) {
+                showStatus('Invalid URL. Use a ya-mahdi.net/view.php link with cat & lang parameters.', 'error');
+                return;
+            }
+
+            currentLang = parsed.lang;
+            loadBtn.disabled = true;
+            showStatus('Fetching content...', 'loading');
+
+            try {
+                const html = await fetchPage(url);
+                showStatus('Parsing slides...', 'loading');
+
+                const result = parseContent(html, currentLang);
+                title = result.title;
+                slides = result.slides;
+
+                if (slides.length <= 1) {
+                    showStatus('No content found. Please check the URL.', 'error');
+                    return;
+                }
+
+                // Set default font sizes based on language
+                if (currentLang === 'ur') {
+                    arabicFontSize = 3;
+                    transFontSize = 1.8;
+                } else if (currentLang === 'az') {
+                    arabicFontSize = 3;
+                    transFontSize = 1.3;
+                } else {
+                    arabicFontSize = 3;
+                    transFontSize = 1.5;
+                }
+
+                currentSlide = 0;
+                showPresenter();
+                renderSlide();
+
+            } catch (e) {
+                showStatus(e.message, 'error');
+            } finally {
+                loadBtn.disabled = false;
+            }
+        }
+
+        function showStatus(msg, type) {
+            statusText.textContent = msg;
+            statusText.className = 'status-text ' + type;
+        }
+
+        // ==================== SCREEN MANAGEMENT ====================
+        function showPresenter() {
+            inputScreen.style.display = 'none';
+            presenterScreen.style.display = 'flex';
+            slideTitle.textContent = title;
+        }
+
+        function goBack() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+            presenterScreen.style.display = 'none';
+            inputScreen.style.display = 'flex';
+        }
+
+        // ==================== SLIDE RENDERING ====================
+        function renderSlide() {
+            const slide = slides[currentSlide];
+
+            // Counter
+            slideCounter.textContent = (currentSlide + 1) + ' / ' + slides.length;
+
+            // Progress
+            const pct = Math.round(((currentSlide + 1) / slides.length) * 100);
+            progressFill.style.width = pct + '%';
+            progressText.textContent = pct + '%';
+
+            // Apply font sizes
+            applyFontSizes();
+
+            // Nav button states
+            $('#btnPrev').disabled = currentSlide === 0;
+            $('#btnNext').disabled = currentSlide === slides.length - 1;
+
+            // Fade transition
+            slideContent.classList.add('fading');
+
+            setTimeout(() => {
+                if (slide.type === 'intro') {
+                    const rtlClass = currentLang === 'ur' ? ' rtl' : '';
+                    slideContent.innerHTML =
+                        '<div class="intro-slide">' +
+                            '<div class="intro-title' + rtlClass + '">' + esc(slide.title) + '</div>' +
+                            '<div class="intro-divider"></div>' +
+                            '<div class="intro-description' + rtlClass + '">' + esc(slide.description) + '</div>' +
+                            '<div class="intro-hint">Press → or Space to begin</div>' +
+                        '</div>';
+                } else {
+                    slideContent.innerHTML =
+                        '<div class="arabic-text">' + esc(slide.arabic) + '</div>' +
+                        '<div class="translation-text lang-' + currentLang + '">' + esc(slide.translation) + '</div>';
+                }
+
+                slideContent.classList.remove('fading');
+
+                // Auto-fit after render
+                if (autoFit) {
+                    requestAnimationFrame(autoFitText);
+                }
+            }, 150);
+        }
+
+        function applyFontSizes() {
+            document.documentElement.style.setProperty('--arabic-size', arabicFontSize + 'rem');
+            document.documentElement.style.setProperty('--trans-size', transFontSize + 'rem');
+            // Update settings panel
+            $('#sArabicSize').textContent = arabicFontSize.toFixed(1);
+            $('#sTransSize').textContent = transFontSize.toFixed(1);
+        }
+
+        function autoFitText() {
+            const area = slideArea;
+            const content = slideContent;
+            const maxH = area.clientHeight * 0.88;
+
+            if (content.scrollHeight <= maxH) return;
+
+            // Proportionally reduce
+            let scale = maxH / content.scrollHeight;
+            scale = Math.max(scale, 0.5); // don't go below 50%
+
+            const newArabic = arabicFontSize * scale;
+            const newTrans = transFontSize * scale;
+
+            document.documentElement.style.setProperty('--arabic-size', newArabic + 'rem');
+            document.documentElement.style.setProperty('--trans-size', newTrans + 'rem');
+        }
+
+        function esc(text) {
+            const d = document.createElement('div');
+            d.textContent = text || '';
+            return d.innerHTML;
+        }
+
+        // ==================== NAVIGATION ====================
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) { currentSlide++; renderSlide(); }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) { currentSlide--; renderSlide(); }
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < slides.length) { currentSlide = index; renderSlide(); }
+        }
+
+        // ==================== FONT SIZE ====================
+        function changeFontSize(delta) {
+            arabicFontSize = clamp(arabicFontSize + delta, 1, 8);
+            transFontSize = clamp(transFontSize + (delta * 0.6), 0.6, 5);
+            renderSlide();
+        }
+
+        function changeArabicSize(delta) {
+            arabicFontSize = clamp(arabicFontSize + delta, 1, 8);
+            renderSlide();
+        }
+
+        function changeTransSize(delta) {
+            transFontSize = clamp(transFontSize + delta, 0.6, 5);
+            renderSlide();
+        }
+
+        function clamp(val, min, max) {
+            return Math.max(min, Math.min(max, val));
+        }
+
+        // ==================== FULLSCREEN ====================
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // ==================== SETTINGS ====================
+        function toggleSettings() {
+            settingsOverlay.classList.toggle('show');
+        }
+
+        function toggleShortcuts() {
+            shortcutsOverlay.classList.toggle('show');
+        }
+
+        function toggleAutoFit() {
+            autoFit = !autoFit;
+            $('#sAutoFit').textContent = autoFit ? 'ON' : 'OFF';
+            $('#sAutoFit').classList.toggle('active', autoFit);
+            if (autoFit) renderSlide();
+        }
+
+        // ==================== EVENT LISTENERS ====================
+
+        // Load button
+        loadBtn.addEventListener('click', loadPresentation);
+        urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') loadPresentation(); });
+
+        // Navigation buttons
+        $('#btnPrev').addEventListener('click', prevSlide);
+        $('#btnNext').addEventListener('click', nextSlide);
+        $('#backBtn').addEventListener('click', goBack);
+
+        // Control buttons
+        $('#btnFontDown').addEventListener('click', () => changeFontSize(-0.2));
+        $('#btnFontUp').addEventListener('click', () => changeFontSize(0.2));
+        $('#btnFullscreen').addEventListener('click', toggleFullscreen);
+        $('#btnSettings').addEventListener('click', toggleSettings);
+        $('#btnHelp').addEventListener('click', toggleShortcuts);
+
+        // Settings panel
+        $('#sArabicDown').addEventListener('click', () => changeArabicSize(-0.2));
+        $('#sArabicUp').addEventListener('click', () => changeArabicSize(0.2));
+        $('#sTransDown').addEventListener('click', () => changeTransSize(-0.2));
+        $('#sTransUp').addEventListener('click', () => changeTransSize(0.2));
+        $('#sAutoFit').addEventListener('click', toggleAutoFit);
+        $('#settingsClose').addEventListener('click', toggleSettings);
+        $('#shortcutsClose').addEventListener('click', toggleShortcuts);
+
+        // Close overlays on background click
+        settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) toggleSettings(); });
+        shortcutsOverlay.addEventListener('click', (e) => { if (e.target === shortcutsOverlay) toggleShortcuts(); });
+
+        // Progress bar click (jump to slide)
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const ratio = (e.clientX - rect.left) / rect.width;
+            const idx = Math.round(ratio * (slides.length - 1));
+            goToSlide(idx);
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Skip if typing in input
+            if (document.activeElement === urlInput) {
+                if (e.key === 'Enter') loadPresentation();
+                return;
+            }
+
+            // Close overlays first
+            if (e.key === 'Escape') {
+                if (settingsOverlay.classList.contains('show')) { toggleSettings(); return; }
+                if (shortcutsOverlay.classList.contains('show')) { toggleShortcuts(); return; }
+                if (document.fullscreenElement) { document.exitFullscreen(); return; }
+                if (presenterScreen.style.display !== 'none') { goBack(); return; }
+                return;
+            }
+
+            // Only when presenter is active
+            if (presenterScreen.style.display === 'none') return;
+
+            // Close overlays on any other key
+            if (settingsOverlay.classList.contains('show') || shortcutsOverlay.classList.contains('show')) return;
+
+            switch (e.key) {
+                case 'ArrowRight':
+                case ' ':
+                case 'PageDown':
+                    e.preventDefault(); nextSlide(); break;
+                case 'ArrowLeft':
+                case 'Backspace':
+                case 'PageUp':
+                    e.preventDefault(); prevSlide(); break;
+                case 'Home':
+                    e.preventDefault(); goToSlide(0); break;
+                case 'End':
+                    e.preventDefault(); goToSlide(slides.length - 1); break;
+                case 'f': case 'F':
+                    e.preventDefault(); toggleFullscreen(); break;
+                case '+': case '=':
+                    e.preventDefault(); changeFontSize(0.2); break;
+                case '-': case '_':
+                    e.preventDefault(); changeFontSize(-0.2); break;
+                case 's': case 'S':
+                    e.preventDefault(); toggleSettings(); break;
+                case '?':
+                    e.preventDefault(); toggleShortcuts(); break;
+                case 'ArrowUp':
+                    e.preventDefault(); changeFontSize(0.1); break;
+                case 'ArrowDown':
+                    e.preventDefault(); changeFontSize(-0.1); break;
+            }
+        });
+
+        // Mouse wheel navigation (with debounce)
+        let wheelTimeout = null;
+        slideArea.addEventListener('wheel', (e) => {
+            if (presenterScreen.style.display === 'none') return;
+            e.preventDefault();
+            if (wheelTimeout) return;
+
+            wheelTimeout = setTimeout(() => { wheelTimeout = null; }, 300);
+
+            if (e.deltaY > 0) nextSlide();
+            else if (e.deltaY < 0) prevSlide();
+        }, { passive: false });
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        slideArea.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        slideArea.addEventListener('touchend', (e) => {
+            const dx = touchStartX - e.changedTouches[0].screenX;
+            const dy = touchStartY - e.changedTouches[0].screenY;
+
+            // Only horizontal swipes (ignore vertical)
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) nextSlide();
+                else prevSlide();
+            }
+        }, { passive: true });
+
+        // Click-based navigation (click left/right half of slide area)
+        slideArea.addEventListener('click', (e) => {
+            // Ignore if clicking buttons
+            if (e.target.closest('.nav-arrow')) return;
+
+            const rect = slideArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const midpoint = rect.width / 2;
+
+            if (x > midpoint) nextSlide();
+            else prevSlide();
+        });
+
+        // Window resize: re-render for auto-fit
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (presenterScreen.style.display !== 'none' && slides.length > 0) {
+                    renderSlide();
+                }
+            }, 200);
+        });
+
+        // Auto-focus URL input
+        urlInput.focus();
+
+    })();
+    </script>
+</body>
+</html>
